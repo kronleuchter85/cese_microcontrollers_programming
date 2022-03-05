@@ -1,3 +1,6 @@
 # microcontrollers_programming
 
-Practica 1 de la materia Programacion de Microcontroladores
+Practicas de la materia Programacion de Microcontroladores
+
+poc_1: Practica 1
+- ejercicio 1
