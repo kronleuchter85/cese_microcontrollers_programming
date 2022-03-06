@@ -1,5 +1,5 @@
 main.c:46:6:exercise_1	8	static
 main.c:61:6:exercise_2	8	static
-main.c:78:5:main	8	static
-main.c:127:13:SystemClock_Config	88	static
-main.c:176:13:Error_Handler	8	static
+main.c:100:5:main	8	static
+main.c:153:13:SystemClock_Config	88	static
+main.c:202:13:Error_Handler	8	static

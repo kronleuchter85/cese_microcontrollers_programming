@@ -60,14 +60,39 @@ void exercise_1() {
 
 void exercise_2() {
 
-	BSP_LED_Toggle(LED1);
-	BSP_LED_Toggle(LED2);
-	BSP_LED_Toggle(LED3);
+	// hay que mantener el boton presionado
+	// no le implementamos la logica para mantener el 
+	// estado.
+	if (BSP_PB_GetState(BUTTON_USER)) {
 
-	HAL_Delay(200);
-	BSP_LED_Toggle(LED1);
-	BSP_LED_Toggle(LED2);
-	BSP_LED_Toggle(LED3);
+		BSP_LED_Toggle(LED1);
+		HAL_Delay(700);
+		BSP_LED_Toggle(LED1);
+
+		BSP_LED_Toggle(LED2);
+		HAL_Delay(700);
+		BSP_LED_Toggle(LED2);
+
+		BSP_LED_Toggle(LED3);
+		HAL_Delay(700);
+		BSP_LED_Toggle(LED3);
+
+	} else {
+
+		BSP_LED_Toggle(LED1);
+		HAL_Delay(200);
+		BSP_LED_Toggle(LED1);
+
+		BSP_LED_Toggle(LED3);
+		HAL_Delay(200);
+		BSP_LED_Toggle(LED3);
+
+		BSP_LED_Toggle(LED2);
+		HAL_Delay(200);
+		BSP_LED_Toggle(LED2);
+
+	}
+
 }
 
 /**
@@ -96,10 +121,14 @@ int main(void) {
 	BSP_LED_Init(LED2);
 	BSP_LED_Init(LED3);
 
+	BSP_PB_Init(BUTTON_USER, BUTTON_MODE_GPIO);
+
 	/* Infinite loop */
 	while (1) {
-		exercise_1();
 
+		//exercise_1();
+
+		exercise_2();
 	}
 }
 
