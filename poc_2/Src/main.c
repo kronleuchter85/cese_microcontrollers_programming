@@ -23,7 +23,6 @@
 
 #include <stdint.h>
 #include <stdbool.h>
-#include <time.h>
 
 /** @addtogroup STM32F4xx_HAL_Examples
  * @{
@@ -34,19 +33,6 @@
  */
 
 /* Private typedef -----------------------------------------------------------*/
-
-// para que esto compile se debe incluir la biblioteca stdint
-typedef uint32_t tick_t;
-
-// para que esto compile se debe incluir la biblioteca stdbool
-typedef bool bool_t;
-
-typedef struct {
-	tick_t startTime;
-	tick_t duration;
-	bool_t running;
-} delay_t;
-
 /* Private define ------------------------------------------------------------*/
 /* Private macro -------------------------------------------------------------*/
 /* Private variables ---------------------------------------------------------*/
@@ -58,78 +44,52 @@ UART_HandleTypeDef UartHandle;
 static void SystemClock_Config(void);
 static void Error_Handler(void);
 
+/* Private functions ---------------------------------------------------------*/
+
+// Qué biblioteca se debe incluir para que esto compile? Rpta: stdint.h
+typedef uint32_t tick_t;
+
+// Qué biblioteca se debe incluir para que esto compile? Rpta: stdbool.h
+typedef bool bool_t;
+
+typedef struct {
+	tick_t startTime;
+	tick_t duration;
+	bool_t running;
+} delay_t;
+
 void delayInit(delay_t *delay, tick_t duration);
 bool_t delayRead(delay_t *delay);
 void delayWrite(delay_t *delay, tick_t duration);
 
-/* Private functions ---------------------------------------------------------*/
-
-// ejercicio 1
-//
 void delayInit(delay_t *delay, tick_t duration) {
-	delay = malloc(sizeof(delay_t));
 	delay->duration = duration;
-	delay->running = false;
 	delay->startTime = HAL_GetTick();
 }
 
-// true - el tiempo se cumplio
-// false - el tiempo no se cumplio (hay q seguir esperando)
 bool_t delayRead(delay_t *delay) {
-
-	tick_t current = HAL_GetTick();
-
-	if ((current - delay->startTime) < delay->duration) {
-
-		// la primera vez que entra 'running' va a estar en false
-		// las siguientes veces, en true
-
-		delay->running = true;
-		return false;
-	} else {
-		delay->running = false;
-		return true;
-	}
+	return ((HAL_GetTick() - delay->startTime) < delay->duration);
 }
 
-void delayWrite(delay_t *delay, tick_t duration) {
 
-	// si no se checkea el estado del flag 'running'
-	// puede suceder que se quiera cambiar el estado
-	// durante la ejecucion de un delay
-	delay->duration = duration;
+void toggle_led(Led_TypeDef led, tick_t duration) {
 
+	BSP_LED_Toggle(led);
+
+	delay_t delay;
+
+	delayInit(&delay, duration);
+
+	while (delayRead(&delay))
+		;
+
+	BSP_LED_Toggle(led);
+
+	delayInit(&delay, duration);
+	while (delayRead(&delay))
+		;
 }
 
-// ejercicio 2
-void exercise_2() {
-
-	// inicializamos el objeto delay
-	//
-	delay_t *delay = NULL;
-	tick_t duration_led1 = 100;
-	delayInit(delay, duration_led1);
-
-	BSP_LED_Toggle(LED1);
-
-	// ejecutamos la logica a realizar durante la espera
-	// no bloqueante
-	//
-	while (!delayRead(delay)) {
-
-	}
-
-	BSP_LED_Toggle(LED1);
-
-//	tick_t duration_led2 = 500;
-//	delayWrite(delay, duration_led2);
-//	BSP_LED_Toggle(LED2);
-
-//	HAL_Delay(200);
-
-//	BSP_LED_Toggle(LED2);
-
-}
 
 /**
  * @brief  Main program
@@ -162,7 +122,9 @@ int main(void) {
 	/* Infinite loop */
 	while (1) {
 
-		exercise_2();
+		toggle_led(LED1, 100);
+		toggle_led(LED2, 500);
+		toggle_led(LED3, 1000);
 	}
 }
 
