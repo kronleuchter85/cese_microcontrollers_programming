@@ -104,12 +104,7 @@ void toggle_led(Led_TypeDef led, tick_t duration) {
 
 	}
 
-
-	delayInit(&delay, duration);
 	BSP_LED_Toggle(led);
-	while (!delayRead(&delay)) {
-
-	}
 }
 
 
