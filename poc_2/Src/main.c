@@ -65,31 +65,64 @@ void delayWrite(delay_t *delay, tick_t duration);
 void delayInit(delay_t *delay, tick_t duration) {
 	delay->duration = duration;
 	delay->startTime = HAL_GetTick();
+	delay->running = false;
 }
 
 bool_t delayRead(delay_t *delay) {
-	return ((HAL_GetTick() - delay->startTime) < delay->duration);
+
+	if ((HAL_GetTick() - delay->startTime) < delay->duration) {
+
+		if (!delay->running)
+			delay->running = true;
+
+		return false;
+
+	} else {
+
+		if (delay->running)
+			delay->running = false;
+
+		return true;
+	}
 }
+
+void delayWrite(delay_t *delay, tick_t duration) {
+	delay->duration = duration;
+}
+
+
 
 
 void toggle_led(Led_TypeDef led, tick_t duration) {
 
-	BSP_LED_Toggle(led);
 
 	delay_t delay;
 
 	delayInit(&delay, duration);
-
-	while (delayRead(&delay))
-		;
-
 	BSP_LED_Toggle(led);
+	while (!delayRead(&delay)) {
+
+	}
+
 
 	delayInit(&delay, duration);
-	while (delayRead(&delay))
-		;
+	BSP_LED_Toggle(led);
+	while (!delayRead(&delay)) {
+
+	}
 }
 
+
+void approach_1() {
+
+	toggle_led(LED1, 100);
+	toggle_led(LED2, 500);
+	toggle_led(LED3, 1000);
+}
+
+void approach_2() {
+
+}
 
 /**
  * @brief  Main program
@@ -122,9 +155,7 @@ int main(void) {
 	/* Infinite loop */
 	while (1) {
 
-		toggle_led(LED1, 100);
-		toggle_led(LED2, 500);
-		toggle_led(LED3, 1000);
+		approach_1();
 	}
 }
 
