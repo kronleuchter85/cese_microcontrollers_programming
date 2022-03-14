@@ -1,6 +1,10 @@
 # microcontrollers_programming
 
-Practicas de la materia Programacion de Microcontroladores
+Universidad de Buenos Aires - Especializacion en Sistemas Embebidos
+Materia: Programacion de Microcontroladores
+Alumno: Gonzalo Carreño
+
+Contenido del repositorio:
 
 poc_1: Practica 1
 - ejercicio 1

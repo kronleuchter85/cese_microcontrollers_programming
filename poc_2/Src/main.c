@@ -24,6 +24,9 @@
 #include <stdint.h>
 #include <stdbool.h>
 
+#define EXECUTION_MODE_DEP = 1
+#define EXECUTION_MODE_INDEP = 0
+
 /** @addtogroup STM32F4xx_HAL_Examples
  * @{
  */
@@ -62,12 +65,37 @@ void delayInit(delay_t *delay, tick_t duration);
 bool_t delayRead(delay_t *delay);
 void delayWrite(delay_t *delay, tick_t duration);
 
+/*
+ * Implementacion de delayInit
+ * Inicializa un delay object utilizando la funcion HAL_GetTick() y seteando el flag running en false
+ *
+ * @params:
+ *  delay - direccion de memoria donde esta definido el delay
+ *  duracion - valor de la duracion
+ */
 void delayInit(delay_t *delay, tick_t duration) {
+
+	// validamos que duration tenga un valor permitido
+	if (duration < 0) {
+		return;
+	}
+
 	delay->duration = duration;
 	delay->startTime = HAL_GetTick();
 	delay->running = false;
 }
 
+/*
+ * Implementacion de delayRead
+ * Valida si el tiempo ha transcurrido con respecto al momento inicial guardado en el objeto delay, el tiempo actual y la duracion.
+ *
+ * @params:
+ *  delay - direccion de memoria donde esta definido el delay
+ *
+ * @returns:
+ *  true - el tiempo ya supero la duracion
+ *  false - el tiempo aun no supero la duracion seteada
+ */
 bool_t delayRead(delay_t *delay) {
 
 	if ((HAL_GetTick() - delay->startTime) < delay->duration) {
@@ -86,10 +114,27 @@ bool_t delayRead(delay_t *delay) {
 	}
 }
 
+/*
+ * Implementacion de delayWrite
+ * Permite cambiar el valor de duracion de un objeto delay existente
+ *
+ * @params:
+ *  delay - direccion de memoria donde esta definido el delay
+ *  duracion - valor de la duracion
+ */
 void delayWrite(delay_t *delay, tick_t duration) {
+
+	// validamos los parameetros
+	if (duration < 0)
+		return;
+
 	delay->duration = duration;
 }
 
+
+const tick_t LED_1_TIME = 100;
+const tick_t LED_2_TIME = 500;
+const tick_t LED_3_TIME = 1000;
 
 
 
@@ -104,6 +149,7 @@ void toggle_led(Led_TypeDef led, tick_t duration) {
 
 	}
 
+
 	BSP_LED_Toggle(led);
 
 	// si no se hace un delay luego de apagar el led entonces no se percibe el cambio de estado
@@ -113,16 +159,11 @@ void toggle_led(Led_TypeDef led, tick_t duration) {
 	}
 }
 
-
 void approach_dependent_blinking() {
-	toggle_led(LED1, 100);
-	toggle_led(LED2, 500);
-	toggle_led(LED3, 1000);
+	toggle_led(LED1, LED_1_TIME);
+	toggle_led(LED2, LED_2_TIME);
+	toggle_led(LED3, LED_3_TIME);
 }
-
-const tick_t LED_1_TIME = 100;
-const tick_t LED_2_TIME = 500;
-const tick_t LED_3_TIME = 1000;
 
 void approach_independent_blinking() {
 
@@ -162,6 +203,8 @@ void approach_independent_blinking() {
 		;
 }
 
+
+
 /**
  * @brief  Main program
  * @param  None
@@ -190,12 +233,15 @@ int main(void) {
 
 	BSP_PB_Init(BUTTON_USER, BUTTON_MODE_GPIO);
 
+
 	/* Infinite loop */
 	while (1) {
 
 //		approach_dependent_blinking();
 
+
 		approach_independent_blinking();
+
 
 	}
 }
