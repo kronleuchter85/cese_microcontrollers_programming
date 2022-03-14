@@ -98,25 +98,67 @@ void toggle_led(Led_TypeDef led, tick_t duration) {
 
 	delay_t delay;
 
-	delayInit(&delay, duration);
 	BSP_LED_Toggle(led);
+	delayInit(&delay, duration);
 	while (!delayRead(&delay)) {
 
 	}
 
 	BSP_LED_Toggle(led);
+
+	// si no se hace un delay luego de apagar el led entonces no se percibe el cambio de estado
+	delayInit(&delay, duration);
+	while (!delayRead(&delay)) {
+
+	}
 }
 
 
-void approach_1() {
-
+void approach_dependent_blinking() {
 	toggle_led(LED1, 100);
 	toggle_led(LED2, 500);
 	toggle_led(LED3, 1000);
 }
 
-void approach_2() {
 
+void approach_independent_blinking() {
+
+	delay_t delay3;
+	delayInit(&delay3, 1000);
+
+	BSP_LED_Toggle(LED3);
+	while (!delayRead(&delay3)) {
+
+		delay_t delay2;
+		delayInit(&delay2, 500);
+		BSP_LED_Toggle(LED2);
+		while (!delayRead(&delay2)) {
+
+			delay_t delay1;
+			delayInit(&delay1, 100);
+			BSP_LED_Toggle(LED1);
+			while (!delayRead(&delay1)) {
+
+			}
+			BSP_LED_Toggle(LED1);
+
+			delayInit(&delay1, 100);
+			while (!delayRead(&delay1))
+				;
+
+		}
+
+		BSP_LED_Toggle(LED2);
+		delayInit(&delay2, 500);
+		while (!delayRead(&delay2))
+			;
+
+	}
+	BSP_LED_Toggle(LED3);
+
+	delayInit(&delay3, 1000);
+	while (!delayRead(&delay3))
+		;
 }
 
 /**
@@ -150,7 +192,10 @@ int main(void) {
 	/* Infinite loop */
 	while (1) {
 
-		approach_1();
+//		approach_dependent_blinking();
+
+		approach_independent_blinking();
+
 	}
 }
 
