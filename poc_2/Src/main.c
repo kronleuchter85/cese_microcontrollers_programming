@@ -239,9 +239,7 @@ int main(void) {
 
 //		approach_dependent_blinking();
 
-
 		approach_independent_blinking();
-
 
 	}
 }
