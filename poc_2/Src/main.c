@@ -120,43 +120,44 @@ void approach_dependent_blinking() {
 	toggle_led(LED3, 1000);
 }
 
+const tick_t LED_1_TIME = 100;
+const tick_t LED_2_TIME = 500;
+const tick_t LED_3_TIME = 1000;
 
 void approach_independent_blinking() {
 
 	delay_t delay3;
-	delayInit(&delay3, 1000);
+	delay_t delay2;
+	delay_t delay1;
 
+	delayInit(&delay3, LED_3_TIME);
 	BSP_LED_Toggle(LED3);
 	while (!delayRead(&delay3)) {
 
-		delay_t delay2;
-		delayInit(&delay2, 500);
+		delayInit(&delay2, LED_2_TIME);
 		BSP_LED_Toggle(LED2);
 		while (!delayRead(&delay2)) {
 
-			delay_t delay1;
-			delayInit(&delay1, 100);
+			delayInit(&delay1, LED_1_TIME);
 			BSP_LED_Toggle(LED1);
 			while (!delayRead(&delay1)) {
 
 			}
-			BSP_LED_Toggle(LED1);
 
-			delayInit(&delay1, 100);
+			BSP_LED_Toggle(LED1);
+			delayInit(&delay1, LED_1_TIME);
 			while (!delayRead(&delay1))
 				;
-
 		}
 
 		BSP_LED_Toggle(LED2);
-		delayInit(&delay2, 500);
+		delayInit(&delay2, LED_2_TIME);
 		while (!delayRead(&delay2))
 			;
 
 	}
 	BSP_LED_Toggle(LED3);
-
-	delayInit(&delay3, 1000);
+	delayInit(&delay3, LED_3_TIME);
 	while (!delayRead(&delay3))
 		;
 }
