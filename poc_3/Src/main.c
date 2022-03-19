@@ -18,165 +18,82 @@
  ******************************************************************************
  */
 
-/* Includes ------------------------------------------------------------------*/
-#include "main.h"
-
 #include <stdint.h>
 #include <stdbool.h>
+
+#include "main.h"
+#include "API_delay.h"
 
 #define EXECUTION_MODE_DEP = 1
 #define EXECUTION_MODE_INDEP = 0
 
-/** @addtogroup STM32F4xx_HAL_Examples
- * @{
- */
-
-/** @addtogroup UART_Printf
- * @{
- */
-
-/* Private typedef -----------------------------------------------------------*/
-/* Private define ------------------------------------------------------------*/
-/* Private macro -------------------------------------------------------------*/
-/* Private variables ---------------------------------------------------------*/
-/* UART handler declaration */
 UART_HandleTypeDef UartHandle;
-
-/* Private function prototypes -----------------------------------------------*/
 
 static void SystemClock_Config(void);
 static void Error_Handler(void);
 
-/* Private functions ---------------------------------------------------------*/
+const tick_t LED_1_TIME = 200;
+const tick_t LED_2_TIME = 200;
+const tick_t LED_3_TIME = 200;
 
-// Qué biblioteca se debe incluir para que esto compile? Rpta: stdint.h
-typedef uint32_t tick_t;
+bool IN_PROGRESS = false;
 
-// Qué biblioteca se debe incluir para que esto compile? Rpta: stdbool.h
-typedef bool bool_t;
+void process_leds(delay_t *delay, Led_TypeDef led) {
 
-typedef struct {
-	tick_t startTime;
-	tick_t duration;
-	bool_t running;
-} delay_t;
+//	if (!IN_PROGRESS) {
+//
+//		IN_PROGRESS = true;
 
-void delayInit(delay_t *delay, tick_t duration);
-bool_t delayRead(delay_t *delay);
-void delayWrite(delay_t *delay, tick_t duration);
-
-/*
- * Implementacion de delayInit
- * Inicializa un delay object utilizando la funcion HAL_GetTick() y seteando el flag running en false
- *
- * @params:
- *  delay - direccion de memoria donde esta definido el delay
- *  duracion - valor de la duracion
- */
-void delayInit(delay_t *delay, tick_t duration) {
-
-	// validamos que duration tenga un valor permitido
-	if (duration < 0) {
-		return;
+	if (delayRead(delay)) {
+		BSP_LED_Toggle(led);
 	}
 
-	delay->duration = duration;
-	delay->startTime = HAL_GetTick();
-	delay->running = false;
+//		IN_PROGRESS = false;
+//	}
 }
 
-/*
- * Implementacion de delayRead
- * Valida si el tiempo ha transcurrido con respecto al momento inicial guardado en el objeto delay, el tiempo actual y la duracion.
- *
- * @params:
- *  delay - direccion de memoria donde esta definido el delay
- *
- * @returns:
- *  true - el tiempo ya supero la duracion
- *  false - el tiempo aun no supero la duracion seteada
- */
-bool_t delayRead(delay_t *delay) {
-
-	if (delay->running) {
-
-		if (HAL_GetTick() >= (delay->startTime + delay->duration)) {
-			delay->running = false;
-			return true;
-		} else {
-			return false;
-		}
-	} else {
-		delay->startTime = HAL_GetTick();
-		delay->running = true;
-		return false;
-	}
-
-}
-
-/*
- * Implementacion de delayWrite
- * Permite cambiar el valor de duracion de un objeto delay existente
- *
- * @params:
- *  delay - direccion de memoria donde esta definido el delay
- *  duracion - valor de la duracion
- */
-void delayWrite(delay_t *delay, tick_t duration) {
-
-// validamos los parameetros
-	if (duration < 0)
-		return;
-
-	delay->duration = duration;
-}
-
-const tick_t LED_1_TIME = 100;
-const tick_t LED_2_TIME = 500;
-const tick_t LED_3_TIME = 1000;
-
-/**
- * @brief  Main program
- * @param  None
- * @retval None
- */
 int main(void) {
-
 	HAL_Init();
 
 	SystemClock_Config();
 
+	// Create three structs of type delay_t
+	static delay_t delayLed1;
+	static delay_t delayLed2;
+	static delay_t delayLed3;
+
+	// Initialize the three leds.
 	BSP_LED_Init(LED1);
 	BSP_LED_Init(LED2);
 	BSP_LED_Init(LED3);
-
-//	BSP_PB_Init(BUTTON_USER, BUTTON_MODE_GPIO);
-
-	delay_t delay3;
-	delay_t delay2;
-	delay_t delay1;
 
 	// Power off the three leds.
 	BSP_LED_Off(LED1);
 	BSP_LED_Off(LED2);
 	BSP_LED_Off(LED3);
 
-	delayInit(&delay3, LED_3_TIME);
-	delayInit(&delay2, LED_2_TIME);
-	delayInit(&delay1, LED_1_TIME);
+	// Initialize the three structs.
+	delayInit(&delayLed1, LED_1_TIME);	//delay 100ms
+	delayInit(&delayLed2, LED_2_TIME);	//delay 500ms
+	delayInit(&delayLed3, LED_3_TIME);	//delay 1000ms
+
+	BSP_PB_Init(BUTTON_USER, BUTTON_MODE_GPIO);
 
 	/* Infinite loop */
 	while (1) {
 
-		if (delayRead(&delay3)) {
-			BSP_LED_Toggle(LED3);
+		// hay que mantener el boton presionado
+		// no le implementamos la logica para mantener el
+		// estado.
+		if (BSP_PB_GetState(BUTTON_USER)) {
+
+			process_leds(&delayLed1, LED1);
+		} else {
+
+			process_leds(&delayLed2, LED2);
+
 		}
-		if (delayRead(&delay2)) {
-			BSP_LED_Toggle(LED2);
-		}
-		if (delayRead(&delay1)) {
-			BSP_LED_Toggle(LED1);
-		}
+
 	}
 }
 
