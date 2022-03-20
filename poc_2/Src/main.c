@@ -150,8 +150,6 @@ int main(void) {
 	BSP_LED_Init(LED2);
 	BSP_LED_Init(LED3);
 
-//	BSP_PB_Init(BUTTON_USER, BUTTON_MODE_GPIO);
-
 	delay_t delay3;
 	delay_t delay2;
 	delay_t delay1;

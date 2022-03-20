@@ -32,66 +32,55 @@ UART_HandleTypeDef UartHandle;
 static void SystemClock_Config(void);
 static void Error_Handler(void);
 
-const tick_t LED_1_TIME = 200;
-const tick_t LED_2_TIME = 200;
-const tick_t LED_3_TIME = 200;
+const tick_t LED_1_TIME = 100;
+const tick_t LED_2_TIME = 500;
+const tick_t LED_3_TIME = 1000;
 
-bool IN_PROGRESS = false;
+typedef struct {
+	Led_TypeDef led;
+	delay_t delay;
+	tick_t duration;
+} LedDelay;
 
-void process_leds(delay_t *delay, Led_TypeDef led) {
+LedDelay* initializeLedDelay(Led_TypeDef led, tick_t duration) {
+	LedDelay *ledDelay = malloc(sizeof(LedDelay));
+	ledDelay->led = led;
+	ledDelay->duration = duration;
+	delayInit(&ledDelay->delay, ledDelay->duration);
 
-//	if (!IN_PROGRESS) {
-//
-//		IN_PROGRESS = true;
+//	BSP_LED_Init(ledDelay.led);
 
-	if (delayRead(delay)) {
-		BSP_LED_Toggle(led);
-	}
-
-//		IN_PROGRESS = false;
-//	}
+	return ledDelay;
 }
 
 int main(void) {
+
 	HAL_Init();
 
 	SystemClock_Config();
 
-	// Create three structs of type delay_t
-	static delay_t delayLed1;
-	static delay_t delayLed2;
-	static delay_t delayLed3;
-
-	// Initialize the three leds.
 	BSP_LED_Init(LED1);
 	BSP_LED_Init(LED2);
 	BSP_LED_Init(LED3);
 
-	// Power off the three leds.
 	BSP_LED_Off(LED1);
 	BSP_LED_Off(LED2);
 	BSP_LED_Off(LED3);
 
-	// Initialize the three structs.
-	delayInit(&delayLed1, LED_1_TIME);	//delay 100ms
-	delayInit(&delayLed2, LED_2_TIME);	//delay 500ms
-	delayInit(&delayLed3, LED_3_TIME);	//delay 1000ms
+	LedDelay *ledDelay1 = initializeLedDelay(LED1, LED_1_TIME);
+	LedDelay *ledDelay2 = initializeLedDelay(LED2, LED_2_TIME);
+	LedDelay *ledDelay3 = initializeLedDelay(LED3, LED_3_TIME);
 
-	BSP_PB_Init(BUTTON_USER, BUTTON_MODE_GPIO);
-
-	/* Infinite loop */
 	while (1) {
 
-		// hay que mantener el boton presionado
-		// no le implementamos la logica para mantener el
-		// estado.
-		if (BSP_PB_GetState(BUTTON_USER)) {
-
-			process_leds(&delayLed1, LED1);
-		} else {
-
-			process_leds(&delayLed2, LED2);
-
+		if (delayRead(&ledDelay1->delay)) {
+			BSP_LED_Toggle(ledDelay1->led);
+		}
+		if (delayRead(&ledDelay2->delay)) {
+			BSP_LED_Toggle(ledDelay2->led);
+		}
+		if (delayRead(&ledDelay3->delay)) {
+			BSP_LED_Toggle(ledDelay3->led);
 		}
 
 	}
