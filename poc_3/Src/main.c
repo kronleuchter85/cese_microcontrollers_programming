@@ -26,15 +26,16 @@
 
 #define EXECUTION_MODE_DEP = 1
 #define EXECUTION_MODE_INDEP = 0
+#define LEDS_AMOUNT  3;
 
 UART_HandleTypeDef UartHandle;
 
 static void SystemClock_Config(void);
 static void Error_Handler(void);
 
-const tick_t LED_1_TIME = 100;
-const tick_t LED_2_TIME = 500;
-const tick_t LED_3_TIME = 1000;
+const tick_t LED_1_TIME = 200;
+const tick_t LED_2_TIME = 200;
+const tick_t LED_3_TIME = 200;
 
 typedef struct {
 	Led_TypeDef led;
@@ -48,41 +49,57 @@ LedDelay* initializeLedDelay(Led_TypeDef led, tick_t duration) {
 	ledDelay->duration = duration;
 	delayInit(&ledDelay->delay, ledDelay->duration);
 
-//	BSP_LED_Init(ledDelay.led);
+	BSP_LED_Init(ledDelay->led);
+	BSP_LED_Off(ledDelay->led);
 
 	return ledDelay;
 }
 
-int main(void) {
+bool rotationLeft = false;
 
+LedDelay *ledsDelays[3];
+
+int main(void) {
 	HAL_Init();
 
+	/* Configure the system clock to 180 MHz */
 	SystemClock_Config();
 
-	BSP_LED_Init(LED1);
-	BSP_LED_Init(LED2);
-	BSP_LED_Init(LED3);
+	// inicializo el array de LedDelays
+	//
+	ledsDelays[0] = initializeLedDelay(LED1, LED_1_TIME);
+	ledsDelays[1] = initializeLedDelay(LED2, LED_2_TIME);
+	ledsDelays[2] = initializeLedDelay(LED3, LED_3_TIME);
 
-	BSP_LED_Off(LED1);
-	BSP_LED_Off(LED2);
-	BSP_LED_Off(LED3);
+	BSP_PB_Init(BUTTON_USER, BUTTON_MODE_GPIO);
 
-	LedDelay *ledDelay1 = initializeLedDelay(LED1, LED_1_TIME);
-	LedDelay *ledDelay2 = initializeLedDelay(LED2, LED_2_TIME);
-	LedDelay *ledDelay3 = initializeLedDelay(LED3, LED_3_TIME);
+	uint8_t last_led_index = 2;
+	int8_t current_led_index = 0;
 
 	while (1) {
 
-		if (delayRead(&ledDelay1->delay)) {
-			BSP_LED_Toggle(ledDelay1->led);
-		}
-		if (delayRead(&ledDelay2->delay)) {
-			BSP_LED_Toggle(ledDelay2->led);
-		}
-		if (delayRead(&ledDelay3->delay)) {
-			BSP_LED_Toggle(ledDelay3->led);
+		if (BSP_PB_GetState(BUTTON_USER)) {
+			while (BSP_PB_GetState(BUTTON_USER)) {
+			}
+			rotationLeft = !rotationLeft;
 		}
 
+		BSP_LED_On(ledsDelays[current_led_index]->led);
+
+		if (delayRead(&ledsDelays[current_led_index]->delay)) {
+
+			BSP_LED_Off(ledsDelays[current_led_index]->led);
+
+			if (rotationLeft) {
+				current_led_index--;
+				if (current_led_index < 0)
+					current_led_index = last_led_index;
+			} else {
+				current_led_index++;
+				if (current_led_index > last_led_index)
+					current_led_index = 0;
+			}
+		}
 	}
 }
 
