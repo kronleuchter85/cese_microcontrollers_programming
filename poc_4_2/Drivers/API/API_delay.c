@@ -1,29 +1,11 @@
 /*
- * API_delay.h
+ * API_delay.c
  *
  *  Created on: 19 Mar 2022
  *      Author: feder
  */
 
-#ifndef API_API_DELAY_H_
-#define API_API_DELAY_H_
-
-#include <stdint.h>
-#include <stdbool.h>
-#include "stm32f4xx_hal.h"
-#include "stm32f4xx_nucleo_144.h"
-
-// Qué biblioteca se debe incluir para que esto compile? Rpta: stdint.h
-typedef uint32_t tick_t;
-
-// Qué biblioteca se debe incluir para que esto compile? Rpta: stdbool.h
-typedef bool bool_t;
-
-typedef struct {
-	tick_t startTime;
-	tick_t duration;
-	bool_t running;
-} delay_t;
+#include "API_delay.h"
 
 /*
  * Implementacion de delayInit
@@ -33,7 +15,17 @@ typedef struct {
  *  delay - direccion de memoria donde esta definido el delay
  *  duracion - valor de la duracion
  */
-void delayInit(delay_t *delay, tick_t duration);
+void delayInit(delay_t *delay, tick_t duration) {
+
+	// validamos que duration tenga un valor permitido
+	if (duration < 0) {
+		return;
+	}
+
+	delay->duration = duration;
+	delay->startTime = HAL_GetTick();
+	delay->running = false;
+}
 
 /*
  * Implementacion de delayRead
@@ -46,7 +38,21 @@ void delayInit(delay_t *delay, tick_t duration);
  *  true - el tiempo ya supero la duracion
  *  false - el tiempo aun no supero la duracion seteada
  */
-bool_t delayRead(delay_t *delay);
+bool_t delayRead(delay_t *delay) {
+	if (delay->running) {
+
+		if (HAL_GetTick() >= (delay->startTime + delay->duration)) {
+			delay->running = false;
+			return true;
+		} else {
+			return false;
+		}
+	} else {
+		delay->startTime = HAL_GetTick();
+		delay->running = true;
+		return false;
+	}
+}
 
 /*
  * Implementacion de delayWrite
@@ -56,6 +62,6 @@ bool_t delayRead(delay_t *delay);
  *  delay - direccion de memoria donde esta definido el delay
  *  duracion - valor de la duracion
  */
-void delayWrite(delay_t *delay, tick_t duration);
-
-#endif /* API_API_DELAY_H_ */
+void delayWrite(delay_t *delay, tick_t duration) {
+	delay->duration = duration;
+}
