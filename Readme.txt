@@ -18,4 +18,12 @@ poc_3: Practica 3
 	ejercicio 2: en main.c
 		Implementar un programa que utilice retardos no bloqueantes y haga titilar en forma periódica e independiente los tres leds de la placa NUCLEO-F429ZI de acuerdo a una secuencia predeterminada como en la práctica 1.Cada led debe permanecer encendido 200 ms.  No debe encenderse más de un led simultáneamente en ningún momento.
 
+poc_4_1: Practica 4 parte 1
+	Esta es la parte 1 de la practica 4. Implementa la logica de debouncing en un modulo independiente utilizando ademas el modulo de delay desarrollado en la practica 3.
+	El comportamiento esperado es que cuando se presiona el boton de usuario se prende el led verde de la placa nucleo y cuando se libera se prende el azul. La implementacion
+	de la logica a realizar esta dada por las funciones buttonPressed y buttonReleased que son implementaciones a nivel de usuario, siendo el modulo el encargado de la gestion
+	de debouncing totalmente abstraido de la implementacion de estas funciones.
+	
+poc_4_2: Practica 4 parte 2
+	...
 	
