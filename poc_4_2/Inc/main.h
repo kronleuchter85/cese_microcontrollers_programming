@@ -26,10 +26,10 @@
 #include "stm32f4xx_hal.h"  		/* <- HAL include */
 #include "stm32f4xx_nucleo_144.h" 	/* <- BSP include */
 
-#include <API_debounce.h>
 #include <stdint.h>
 #include <stdbool.h>
-#include "API_delay.h"
+#include "inc/API_delay.h"
+#include "inc/API_debounce.h"
 
 /* Exported types ------------------------------------------------------------*/
 /* Exported constants --------------------------------------------------------*/
