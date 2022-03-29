@@ -5,13 +5,24 @@
  *      Author: feder
  */
 
-#include "API_MEF.h"
+#include <API_debounce.h>
 #include "API_delay.h"
 #include "stm32f4xx_hal.h"  		/* <- HAL include */
 #include "stm32f4xx_nucleo_144.h"
 
+static bool_t key_pressed = false;
+
 static debounceState_t currentState;
 static delay_t delay;
+
+bool_t readKey() {
+
+	if (key_pressed) {
+		key_pressed = false;
+		return true;
+	}
+	return false;
+}
 
 void debounceFSM_init() {
 	currentState = BUTTON_UP;
@@ -105,3 +116,17 @@ void debounceFSM_update() {
 	}
 
 }
+
+void buttonPressed() {
+
+	key_pressed = true;
+
+//	BSP_LED_Off(LED2);
+//	BSP_LED_On(LED1);
+}
+
+void buttonReleased() {
+//	BSP_LED_Off(LED1);
+//	BSP_LED_On(LED2);
+}
+

@@ -13,10 +13,19 @@
 static debounceState_t currentState;
 static delay_t delay;
 
+/*
+ * Inicializa el modulo de debouncing
+ */
 void debounceFSM_init() {
 	currentState = BUTTON_UP;
 }
 
+/*
+ * Realiza el checkeo periodico de la maquina de estados gestionada
+ * por el modulo de debouncing que invoca las funciones
+ * 'buttonPressed' y 'buttonReleased' cuando el boton de la placa
+ * se presiona o libera.
+ */
 void debounceFSM_update() {
 
 	uint32_t userButtonReading = BSP_PB_GetState(BUTTON_USER);

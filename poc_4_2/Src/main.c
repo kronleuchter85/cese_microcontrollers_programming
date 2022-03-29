@@ -18,47 +18,83 @@
  ******************************************************************************
  */
 
-#include <API_MEF.h>
-#include <stdint.h>
-#include <stdbool.h>
-#include "API_delay.h"
 #include "main.h"
+
+#define EXECUTION_MODE_DEP = 1
+#define EXECUTION_MODE_INDEP = 0
+#define LEDS_AMOUNT  3;
 
 UART_HandleTypeDef UartHandle;
 
 static void SystemClock_Config(void);
 static void Error_Handler(void);
 
-void buttonPressed() {
-	BSP_LED_Off(LED2);
-	BSP_LED_On(LED1);
+const tick_t LED_TIME_SLOW = 500;
+const tick_t LED_TIME_FAST = 100;
+
+typedef struct {
+	Led_TypeDef led;
+	delay_t delay;
+	tick_t duration;
+} LedDelay;
+
+LedDelay* initializeLedDelay(Led_TypeDef led, tick_t duration) {
+	LedDelay *ledDelay = malloc(sizeof(LedDelay));
+	ledDelay->led = led;
+	ledDelay->duration = duration;
+	delayInit(&ledDelay->delay, ledDelay->duration);
+
+	BSP_LED_Init(ledDelay->led);
+	BSP_LED_Off(ledDelay->led);
+
+	return ledDelay;
 }
 
-void buttonReleased() {
-	BSP_LED_Off(LED1);
-	BSP_LED_On(LED2);
-}
+bool leds_speed_fast = true;
+
+LedDelay *ledsDelays[3];
 
 int main(void) {
 	HAL_Init();
 
-	/* Configure the system clock to 180 MHz */
 	SystemClock_Config();
 
 	BSP_PB_Init(BUTTON_USER, BUTTON_MODE_GPIO);
 
-	BSP_LED_Init(LED1);
-	BSP_LED_Init(LED2);
+	ledsDelays[0] = initializeLedDelay(LED1, LED_TIME_FAST);
+	ledsDelays[1] = initializeLedDelay(LED2, LED_TIME_FAST);
+	ledsDelays[2] = initializeLedDelay(LED3, LED_TIME_FAST);
 
-	BSP_LED_Off(LED1);
-	BSP_LED_Off(LED2);
+	uint8_t last_led_index = 2;
+	int8_t current_led_index = 0;
 
 	debounceFSM_init();
 
 	while (true) {
-		debounceFSM_update();
-	}
 
+		debounceFSM_update();
+
+		if (readKey()) {
+			leds_speed_fast = !leds_speed_fast;
+
+			tick_t speed = leds_speed_fast ? 100 : 500;
+			ledsDelays[0] = initializeLedDelay(LED1, speed);
+			ledsDelays[1] = initializeLedDelay(LED2, speed);
+			ledsDelays[2] = initializeLedDelay(LED3, speed);
+		}
+
+		BSP_LED_On(ledsDelays[current_led_index]->led);
+
+		if (delayRead(&ledsDelays[current_led_index]->delay)) {
+
+			BSP_LED_Off(ledsDelays[current_led_index]->led);
+
+			current_led_index--;
+
+			if (current_led_index < 0)
+				current_led_index = last_led_index;
+		}
+	}
 }
 
 static void SystemClock_Config(void) {

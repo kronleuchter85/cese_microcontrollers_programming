@@ -25,5 +25,8 @@ poc_4_1: Practica 4 parte 1
 	de debouncing totalmente abstraido de la implementacion de estas funciones.
 	
 poc_4_2: Practica 4 parte 2
-	...
+	Esta es la parte 2 de la practica 4. Implementa la logica de cambiar la velocidad de titilado entre FAST (100 ms) y SLOW (500ms) cada vez q se presiona el boton de usuario.
+	Esto se logra por medio de la gestion de un evento por medio del modulo de debounce implementado con una maquina de estados finitos. La modularizacion en si ya la habia 
+	implementado en la parte 1 de esta misma practica pero en esta parte le cambio el nombre al modulo como especifica el enunciado y le agrego la variable global privada con su
+	correspondiente funcion publica.
 	

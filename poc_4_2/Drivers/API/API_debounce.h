@@ -1,9 +1,14 @@
 /*
- * MEF.c
+ * API_debounce.h
  *
  *  Created on: 29 Mar 2022
  *      Author: feder
  */
+
+#ifndef API_API_DEBOUNCE_H_
+#define API_API_DEBOUNCE_H_
+
+#include "API_delay.h"
 
 typedef enum {
 	BUTTON_UP, BUTTON_FALLING, BUTTON_DOWN, BUTTON_RAISING,
@@ -35,3 +40,9 @@ void buttonPressed();
  */
 void buttonReleased();
 
+/*
+ * Lee el estado interno devolviendo true si la tecla fue presionada.
+ * Cada vez que esto ocurre resetea el estado de la tecla a liberada.
+ */
+bool_t readKey();
+#endif /* API_API_DEBOUNCE_H_ */
