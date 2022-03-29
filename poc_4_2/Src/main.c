@@ -18,16 +18,12 @@
  ******************************************************************************
  */
 
+#include "inc/Firmware_Init.h"
 #include "main.h"
 
 #define EXECUTION_MODE_DEP = 1
 #define EXECUTION_MODE_INDEP = 0
 #define LEDS_AMOUNT  3;
-
-UART_HandleTypeDef UartHandle;
-
-static void SystemClock_Config(void);
-static void Error_Handler(void);
 
 const tick_t LED_TIME_SLOW = 500;
 const tick_t LED_TIME_FAST = 100;
@@ -38,49 +34,52 @@ typedef struct {
 	tick_t duration;
 } LedDelay;
 
-LedDelay* initializeLedDelay(Led_TypeDef led, tick_t duration) {
-	LedDelay *ledDelay = malloc(sizeof(LedDelay));
-	ledDelay->led = led;
-	ledDelay->duration = duration;
-	delayInit(&ledDelay->delay, ledDelay->duration);
+static LedDelay* initializeLedDelay(Led_TypeDef led, tick_t duration);
+static void initializeAllLeds(tick_t duration);
 
-	BSP_LED_Init(ledDelay->led);
-	BSP_LED_Off(ledDelay->led);
-
-	return ledDelay;
-}
-
-bool leds_speed_fast = true;
-
-LedDelay *ledsDelays[3];
+static bool leds_speed_fast = true;
+static LedDelay *ledsDelays[3];
 
 int main(void) {
-	HAL_Init();
 
+	//
+	// inicializamos los componentes del firmware que configuran
+	// la HAL y setean el systick
+	//
+	HAL_Init();
 	SystemClock_Config();
 
 	BSP_PB_Init(BUTTON_USER, BUTTON_MODE_GPIO);
 
-	ledsDelays[0] = initializeLedDelay(LED1, LED_TIME_FAST);
-	ledsDelays[1] = initializeLedDelay(LED2, LED_TIME_FAST);
-	ledsDelays[2] = initializeLedDelay(LED3, LED_TIME_FAST);
+	//
+	// inicializamos los leds en FAST
+	//
+	initializeAllLeds(LED_TIME_FAST);
 
 	uint8_t last_led_index = 2;
 	int8_t current_led_index = 0;
 
+	//
+	// inicializamos el modulo de debounce
+	//
 	debounceFSM_init();
 
 	while (true) {
 
+		//
+		// ejecutamos el modulo de debounce
+		//
 		debounceFSM_update();
 
 		if (readKey()) {
 			leds_speed_fast = !leds_speed_fast;
 
 			tick_t speed = leds_speed_fast ? 100 : 500;
-			ledsDelays[0] = initializeLedDelay(LED1, speed);
-			ledsDelays[1] = initializeLedDelay(LED2, speed);
-			ledsDelays[2] = initializeLedDelay(LED3, speed);
+
+			//
+			// re-inicializamos los leds con la velocidad actual
+			//
+			initializeAllLeds(speed);
 		}
 
 		BSP_LED_On(ledsDelays[current_led_index]->led);
@@ -97,78 +96,21 @@ int main(void) {
 	}
 }
 
-static void SystemClock_Config(void) {
-	RCC_ClkInitTypeDef RCC_ClkInitStruct;
-	RCC_OscInitTypeDef RCC_OscInitStruct;
-
-	/* Enable Power Control clock */
-	__HAL_RCC_PWR_CLK_ENABLE();
-
-	/* The voltage scaling allows optimizing the power consumption when the device is
-	 clocked below the maximum system frequency, to update the voltage scaling value
-	 regarding system frequency refer to product datasheet.  */
-	__HAL_PWR_VOLTAGESCALING_CONFIG(PWR_REGULATOR_VOLTAGE_SCALE1);
-
-	/* Enable HSE Oscillator and activate PLL with HSE as source */
-	RCC_OscInitStruct.OscillatorType = RCC_OSCILLATORTYPE_HSE;
-	RCC_OscInitStruct.HSEState = RCC_HSE_BYPASS;
-	RCC_OscInitStruct.PLL.PLLState = RCC_PLL_ON;
-	RCC_OscInitStruct.PLL.PLLSource = RCC_PLLSOURCE_HSE;
-	RCC_OscInitStruct.PLL.PLLM = 8;
-	RCC_OscInitStruct.PLL.PLLN = 360;
-	RCC_OscInitStruct.PLL.PLLP = RCC_PLLP_DIV2;
-	RCC_OscInitStruct.PLL.PLLQ = 7;
-	if (HAL_RCC_OscConfig(&RCC_OscInitStruct) != HAL_OK) {
-		/* Initialization Error */
-		Error_Handler();
-	}
-
-	if (HAL_PWREx_EnableOverDrive() != HAL_OK) {
-		/* Initialization Error */
-		Error_Handler();
-	}
-
-	/* Select PLL as system clock source and configure the HCLK, PCLK1 and PCLK2
-	 clocks dividers */
-	RCC_ClkInitStruct.ClockType = (RCC_CLOCKTYPE_SYSCLK | RCC_CLOCKTYPE_HCLK | RCC_CLOCKTYPE_PCLK1 | RCC_CLOCKTYPE_PCLK2);
-	RCC_ClkInitStruct.SYSCLKSource = RCC_SYSCLKSOURCE_PLLCLK;
-	RCC_ClkInitStruct.AHBCLKDivider = RCC_SYSCLK_DIV1;
-	RCC_ClkInitStruct.APB1CLKDivider = RCC_HCLK_DIV4;
-	RCC_ClkInitStruct.APB2CLKDivider = RCC_HCLK_DIV2;
-	if (HAL_RCC_ClockConfig(&RCC_ClkInitStruct, FLASH_LATENCY_5) != HAL_OK) {
-		/* Initialization Error */
-		Error_Handler();
-	}
-}
-/**
- * @brief  This function is executed in case of error occurrence.
- * @param  None
- * @retval None
- */
-static void Error_Handler(void) {
-	/* Turn LED2 on */
-	BSP_LED_On(LED2);
-	while (1) {
-	}
+static void initializeAllLeds(tick_t speed) {
+	ledsDelays[0] = initializeLedDelay(LED1, speed);
+	ledsDelays[1] = initializeLedDelay(LED2, speed);
+	ledsDelays[2] = initializeLedDelay(LED3, speed);
 }
 
-#ifdef  USE_FULL_ASSERT
-/**
-  * @brief  Reports the name of the source file and the source line number
-  *         where the assert_param error has occurred.
-  * @param  file: pointer to the source file name
-  * @param  line: assert_param error line source number
-  * @retval None
-  */
-void assert_failed(uint8_t *file, uint32_t line)
-{
-  /* User can add his own implementation to report the file name and line number,
-     ex: printf("Wrong parameters value: file %s on line %d\r\n", file, line) */
+static LedDelay* initializeLedDelay(Led_TypeDef led, tick_t duration) {
+	LedDelay *ledDelay = (LedDelay*) malloc(sizeof(LedDelay));
+	ledDelay->led = led;
+	ledDelay->duration = duration;
+	delayInit(&ledDelay->delay, ledDelay->duration);
 
-  /* Infinite loop */
-  while (1)
-  {
-  }
+	BSP_LED_Init(ledDelay->led);
+	BSP_LED_Off(ledDelay->led);
+
+	return ledDelay;
 }
-#endif
 
