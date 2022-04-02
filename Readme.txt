@@ -43,11 +43,7 @@ poc_4_2: Practica 4 - parte 2 - Debouncing Implementation (Modular Implementatio
 ----------------------------------------------------------------------------------------------------------------------
 Implementa la logica de cambiar la velocidad de titilado entre FAST (100 ms) y SLOW (500ms) cada vez q se presiona el boton de usuario.	Esto se logra por medio de la gestion de un evento usando el modulo de debounce implementado con una maquina de estados finitos. La modularizacion en si ya la habia implementado en la parte 1 de esta misma practica pero en esta parte le cambio el nombre al modulo como especifica el enunciado y le agrego la variable global privada con su correspondiente funcion publica.
 
-
-
 ----------------------------------------------------------------------------------------------------------------------
 poc_5: Practica 5 - UART Communication
 ----------------------------------------------------------------------------------------------------------------------
-
-....
-	
+Implementa la logica para utilizar la comunicacion serie por medio de la UART. El programa de ejemplo recibe comandos y envia mensajes por el puerto serie COM3. Para ejecutarlo seguir las instrucciones detalladas en el archivo Readme.txt dentro del directorio.
