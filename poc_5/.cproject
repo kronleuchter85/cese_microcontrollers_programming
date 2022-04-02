@@ -202,10 +202,10 @@
 	</storageModule>
 	<storageModule moduleId="refreshScope" versionNumber="2">
 		<configuration configurationName="Debug">
-			<resource resourceType="PROJECT" workspacePath="/poc_3"/>
+			<resource resourceType="PROJECT" workspacePath="/poc_5"/>
 		</configuration>
 		<configuration configurationName="Release">
-			<resource resourceType="PROJECT" workspacePath="/poc_3"/>
+			<resource resourceType="PROJECT" workspacePath="/poc_5"/>
 		</configuration>
 	</storageModule>
 </cproject>
