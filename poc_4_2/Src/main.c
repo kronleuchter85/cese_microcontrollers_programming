@@ -20,6 +20,7 @@
 
 #include "inc/Firmware_Init.h"
 #include "main.h"
+#include <stdlib.h>
 
 #define EXECUTION_MODE_DEP = 1
 #define EXECUTION_MODE_INDEP = 0
