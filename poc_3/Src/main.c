@@ -20,6 +20,7 @@
 
 #include <stdint.h>
 #include <stdbool.h>
+#include <stdlib.h>
 
 #include "main.h"
 #include "API_delay.h"
