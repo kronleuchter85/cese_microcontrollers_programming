@@ -12,4 +12,6 @@ void uart_communication_service_config();
 
 void uart_communication_service_execute();
 
+void process_mef();
+
 #endif /* API_INC_UART_COMMUNICATION_SERVICE_H_ */

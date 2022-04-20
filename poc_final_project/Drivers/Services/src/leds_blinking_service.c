@@ -46,6 +46,10 @@ void led_sequence_service_config(LedSequenceConfig *config) {
 
 }
 
+void led_sequence_service_update() {
+
+}
+
 /*
  * Ejecuta la visualizacion de la secuencia de leds activa a la velocidad seleccionada
  */

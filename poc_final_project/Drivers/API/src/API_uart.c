@@ -77,7 +77,7 @@ void uartsendString(uint8_t *pstring) {
  * @param[uint16_t*]: tamaño mensaje a recibir por la UART
  */
 void uartReceiveStringSize(uint8_t *pstring, uint16_t size) {
-	HAL_StatusTypeDef ret = HAL_UART_Receive(&UartHandle, pstring, size, 1000);
+	HAL_StatusTypeDef ret = HAL_UART_Receive(&UartHandle, pstring, size, 1);
 
 	if (ret == HAL_ERROR) {
 		printf("El estado de HAL_StatusTypeDef resulto con error. Hay errores en la configuracion de la comunicacion serie de la UART");

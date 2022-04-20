@@ -80,6 +80,10 @@ void uartReceiveStringSize(uint8_t *pstring, uint16_t size) {
 	HAL_StatusTypeDef ret = HAL_UART_Receive(&UartHandle, pstring, size, 1000);
 
 	if (ret == HAL_ERROR) {
-		printf("El estado de HAL_StatusTypeDef resulto con error. Hay errores en la configuracion de la comunicacion serie de la UART");
+		printf("El estado de HAL_StatusTypeDef resulto ERROR");
+	} else if (ret == HAL_TIMEOUT) {
+		printf("El estado de HAL_StatusTypeDef resulto TIMEOUT");
+	} else if (ret == HAL_OK) {
+		printf("El estado de HAL_StatusTypeDef resulto OK");
 	}
 }
