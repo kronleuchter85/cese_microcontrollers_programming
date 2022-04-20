@@ -46,8 +46,14 @@ void led_sequence_service_config(LedSequenceConfig *config) {
 
 }
 
-void led_sequence_service_update() {
+void led_sequence_service_reset() {
+	BSP_LED_Off(LED1);
+	BSP_LED_Off(LED2);
+	BSP_LED_Off(LED3);
+}
 
+void led_sequence_service_update() {
+	BSP_LED_Off(ledsDelays[current_led_index]->led);
 }
 
 /*

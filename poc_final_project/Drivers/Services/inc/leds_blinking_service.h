@@ -39,6 +39,8 @@ typedef struct {
 
 void led_sequence_service_config(LedSequenceConfig *config);
 
+void led_sequence_service_reset();
+
 void led_sequence_service_execute();
 
 #endif /* API_INC_LEDS_BLINKING_SERVICE_H_ */
