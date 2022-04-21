@@ -37,6 +37,8 @@ static void uart_flow_process_step_waiting_for_sequence_led_1();
 static void uart_flow_process_utils_print_options();
 static void uart_flow_process_step_waiting_for_speed();
 static void uart_flow_process_step_recorded_speed();
+static void uart_flow_process_step_waiting_for_speed_activation();
+static void uart_flow_process_step_speed_activated();
 
 //
 //-------------------------------------- Public members ------------------------------------------------------------------
@@ -67,7 +69,6 @@ void uart_communication_service_config() {
 }
 
 uint8_t speed_digits[4];
-
 uint8_t last_speed_digit = 0;
 
 void uart_communication_service_execute() {
@@ -135,9 +136,13 @@ void uart_communication_service_execute() {
 
 		case WAITING_FOR_SPEED_ACTIVATION:
 
+			uart_flow_process_step_waiting_for_speed_activation();
+
 			break;
 
 		case SPEED_ACTIVATED:
+
+			uart_flow_process_step_speed_activated();
 
 			break;
 
@@ -148,8 +153,32 @@ void uart_communication_service_execute() {
 /// ------------------------------------ Private Functions ----------------------------------------
 ///
 
-static void uart_flow_process_step_waiting_for_speed() {
-	uint8_t message[40];
+static void uart_flow_process_step_speed_activated() {
+
+	char message[30];
+
+	///
+	/// agrego un statement vacio porque a C no le gusta que despues de una etiqueta
+	/// se empiece con una declaracion de variables x_X
+	///
+	;
+
+	uint8_t index = repository_active_speed_index_get();
+	uint16_t speed = repository_available_speed_get(index);
+
+	//
+	// imprimimos la nueva secuencia creada
+	//
+	strncpy(message, "", strlen(message));
+	sprintf(message, "Velocidad Activada:  %i: %i \n\r", index, speed);
+
+	uartsendString("\n\r");
+	uartsendString(message);
+
+	state = WELCOME;
+}
+
+static void uart_flow_process_step_waiting_for_speed_activation() {
 
 	uint8_t uart_command[2];
 	strncpy(uart_command, "", strlen(uart_command));
@@ -171,17 +200,58 @@ static void uart_flow_process_step_waiting_for_speed() {
 			|| !strcmp((const char*) uart_command, "8")
 			|| !strcmp((const char*) uart_command, "9")) {
 
-		speed_digits[last_speed_digit] = uart_command[0];
-		last_speed_digit++;
+		uint8_t selected_speed_index = atoi(uart_command);
 
-	} else if (!strcmp(uart_command, "\r\n")) {
-		uartsendString("\n\r");
+		repository_active_speed_index_set(selected_speed_index);
 
-		strncpy(message, "", strlen(message));
-		sprintf(message, "Velocidad Ingresada: %s \n\r", speed_digits);
-		uartsendString(message);
+		state = SPEED_ACTIVATED;
+
 	} else if (strlen(uart_command) > 0) {
+		uartsendString("\n\r");
+		uartsendString("La opcion ingresada no se encuentra dentro de los valores permitidos ");
+		uartsendString("\n\r");
+		uartsendString("Intente de nuevo: ");
+	}
+}
 
+static void uart_flow_process_step_waiting_for_speed() {
+
+	uint8_t uart_command[2];
+	strncpy(uart_command, "", strlen(uart_command));
+
+	uartReceiveStringSize(uart_command, 1);
+
+	if (strlen(uart_command) > 0)
+		uartsendString((uint8_t*) uart_command);
+
+	if (!strcmp((const char*) uart_command, "0")
+			|| !strcmp((const char*) uart_command, "1")
+			|| !strcmp((const char*) uart_command, "2")
+			|| !strcmp((const char*) uart_command, "3")
+			|| !strcmp((const char*) uart_command, "4")
+			|| !strcmp((const char*) uart_command, "5")
+			|| !strcmp((const char*) uart_command, "6")
+			|| !strcmp((const char*) uart_command, "7")
+			|| !strcmp((const char*) uart_command, "8")
+			|| !strcmp((const char*) uart_command, "9")) {
+
+		if (last_speed_digit < 4) {
+			speed_digits[last_speed_digit] = uart_command[0];
+			last_speed_digit++;
+		}
+
+	}
+
+	else if (!strcmp(uart_command, "\r\n") || !strcmp(uart_command, "\r")) {
+
+		state = RECORDED_SPEED;
+	}
+
+	else if (strlen(uart_command) > 0) {
+		uartsendString("\n\r");
+		uartsendString("La opcion ingresada no se encuentra dentro de los valores permitidos ");
+		uartsendString("\n\r");
+		uartsendString("Intente de nuevo: ");
 	}
 
 }
@@ -206,6 +276,11 @@ static void uart_flow_process_step_recorded_speed() {
 	uartsendString(message);
 
 	strncpy(speed_digits, "", strlen(speed_digits));
+
+	//
+	// reseteamos el indice para agregar velocidades
+	//
+	last_speed_digit = 0;
 
 	state = WELCOME;
 }
@@ -272,7 +347,7 @@ static void uart_flow_process_step_waiting_for_user_actions() {
 			// si el elemento actual es de la secuencia activa
 			//
 			if (repository_active_sequence_index_get() == i) {
-				sprintf(message, " %i: [%i,%i,%i] (Active) \n\r", i, seq->led_1, seq->led_2, seq->led_3);
+				sprintf(message, " %i: [%i,%i,%i]   (active) \n\r", i, seq->led_1, seq->led_2, seq->led_3);
 			}
 
 			//
@@ -301,7 +376,7 @@ static void uart_flow_process_step_waiting_for_user_actions() {
 			//
 			if (repository_active_speed_index_get() == i) {
 
-				sprintf(message, " %i: '%i' (Active) \n\r", i, speed);
+				sprintf(message, " %i: %i ms   (active) \n\r", i, speed);
 			}
 
 			//
@@ -309,7 +384,7 @@ static void uart_flow_process_step_waiting_for_user_actions() {
 			//
 			else {
 
-				sprintf(message, " %i: '%i' \n\r", i, speed);
+				sprintf(message, " %i: %i ms \n\r", i, speed);
 			}
 
 			uartsendString(message);
@@ -352,7 +427,14 @@ static void uart_flow_process_step_waiting_for_user_actions() {
 
 	else if (!strcmp((const char*) uart_command, "b") || !strcmp((const char*) uart_command, "B")) {
 
-	} else if (strlen(uart_command) > 0) {
+		uartsendString("\n\r");
+		uartsendString("Ingrese el numero de velocidad a activar: ");
+
+		state = WAITING_FOR_SPEED_ACTIVATION;
+
+	}
+
+	else if (strlen(uart_command) > 0) {
 		uartsendString("\n\r");
 		uartsendString("La opcion ingresada no se encuentra dentro de los valores permitidos ");
 		uartsendString("\n\r");

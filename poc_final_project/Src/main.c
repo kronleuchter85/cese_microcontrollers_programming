@@ -32,7 +32,7 @@ int main(void) {
 
 		UartFlowState state = uart_communication_service_current_state_get();
 
-		if (state == SEQUENCE_ACTIVATED) {
+		if (state == SEQUENCE_ACTIVATED || state == SPEED_ACTIVATED) {
 			local_operations_service_show_sequence_set(false);
 
 			led_sequence_service_config();
