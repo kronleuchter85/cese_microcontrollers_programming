@@ -19,6 +19,12 @@ typedef enum {
 	WAITING_FOR_SEQUENCE_ACTIVATION,
 	SEQUENCE_ACTIVATED,
 
+	WAITING_FOR_SPEED,
+	RECORDED_SPEED,
+
+	WAITING_FOR_SPEED_ACTIVATION,
+	SPEED_ACTIVATED,
+
 } UartFlowState;
 
 UartFlowState uart_communication_service_current_state_get();
