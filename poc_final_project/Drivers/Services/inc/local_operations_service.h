@@ -12,7 +12,9 @@
 #include "stm32f4xx_nucleo_144.h"
 #include "stdbool.h"
 
-bool local_operations_service_is_show_sequence();
+void local_operations_service_show_sequence_set(bool s);
+
+bool local_operations_service_show_sequence_get();
 
 void local_operations_service_config();
 

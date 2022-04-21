@@ -28,16 +28,11 @@ typedef struct {
 	tick_t duration;
 } LedDelay;
 
-typedef struct {
-	uint8_t sequence[3];
-	uint8_t speed;
-} LedSequenceConfig;
-
 //
 //-------------------------------------- Public members ------------------------------------------------------------------
 //
 
-void led_sequence_service_config(LedSequenceConfig *config);
+void led_sequence_service_config();
 
 void led_sequence_service_reset();
 

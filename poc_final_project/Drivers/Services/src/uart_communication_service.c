@@ -7,39 +7,53 @@
 
 #include <uart_communication_service.h>
 #include <leds_blinking_service.h>
-#include "API_uart.h"
+#include <API_uart.h>
+#include <repository.h>
 
 //
 //-------------------------------------- Contants ----------------------------------------------------------------------
 //
 
 const char *standardSeparator = "---------------------------------------------------------";
-const char *standardCR = "\n\r";
 const char *welcomeMessage = "Bienvenido!";
-const char *optionsMessage = "Los Comandos validos son:\n\r - a \n\r - b";
-const char *inputRequestMessage = "Por favor ingrese un comando:";
 
 //
-//-------------------------------------- MEF ------------------------------------------------------------------
+//-------------------------------------- Private members ------------------------------------------------------------------
 //
 
-typedef enum {
-	WELCOME,
-	WAITING_FOR_USER_ACTIONS,
-	WAITING_FOR_SEQUENCE_LED_1,
-	WAITING_FOR_SEQUENCE_LED_2,
-	WAITING_FOR_SEQUENCE_LED_3,
-	RECORD_SEQUENCE,
+static LedSequence *new_sequence = NULL;
 
-} UART_Service_Config_MEF;
+static UartFlowState state = WAITING_FOR_USER_ACTIONS;
 
-uint8_t uart_command[2];
+//
+//-------------------------------------- Public members ------------------------------------------------------------------
+//
 
-UART_Service_Config_MEF state = WAITING_FOR_USER_ACTIONS;
+UartFlowState uart_communication_service_current_state_get() {
+	return state;
+}
 
-uint8_t led_sequence[3];
+void uart_communication_service_config() {
 
-static void print_message_request_sequence() {
+	//
+	// Configuracion de la UART
+	//
+	uartinit();
+
+	//
+	// Mensaje de bienvenida
+	//
+	int i;
+	for (i = 0; i < 10; i++)
+		uartsendString((uint8_t*) standardSeparator);
+
+	uartsendString("\n\r");
+	uartsendString((uint8_t*) welcomeMessage);
+
+	state = WELCOME;
+}
+
+static void uart_communication_service_print_options() {
 
 	uartsendString("\n\r");
 	uartsendString("Ingrese una Opcion:");
@@ -57,35 +71,19 @@ static void print_message_request_sequence() {
 
 }
 
-typedef struct {
-	uint8_t led_1;
-	uint8_t led_2;
-	uint8_t led_3;
-} LedSequence;
+void uart_communication_service_execute() {
 
-typedef struct {
-	uint8_t speed;
-} LedSpeed;
+	char message[30];
 
-static LedSequence *new_sequence = NULL;
-static LedSpeed *new_speed = NULL;
-
-static LedSequence *available_sequences[20];
-static uint8_t added_sequences = 0;
-
-static add_led_sequence(LedSequence *seq) {
-	available_sequences[added_sequences] = seq;
-	added_sequences++;
-}
-
-void process_mef() {
+	uint8_t uart_command[2];
+	strncpy(uart_command, "", strlen(uart_command));
 
 	switch (state) {
 
 		case WELCOME:
 
 			uartsendString("\n\r");
-			print_message_request_sequence();
+			uart_communication_service_print_options();
 
 			state = WAITING_FOR_USER_ACTIONS;
 
@@ -93,14 +91,15 @@ void process_mef() {
 
 		case WAITING_FOR_USER_ACTIONS:
 
-			strncpy(uart_command, "", strlen(uart_command));
 			uartReceiveStringSize(uart_command, 1);
 
 			if (strlen(uart_command) > 0) {
 				uartsendString((uint8_t*) uart_command);
-				uartsendString("\n\r");
 			}
 
+			///
+			/// Se selecciona ingresar una nueva secuencia
+			///
 			if (!strcmp((const char*) uart_command, "s") || !strcmp((const char*) uart_command, "S")) {
 
 				//
@@ -113,26 +112,111 @@ void process_mef() {
 				uartsendString("Ingrese una secuencia de tres digitos:");
 
 				new_sequence = malloc(sizeof(LedSequence));
-			} else if (!strcmp((const char*) uart_command, "l") || !strcmp((const char*) uart_command, "L")) {
+			}
 
-				char message[30];
+			///
+			/// Se selecciona listar las secuencias y velocidades disponibles
+			///
+			else if (!strcmp((const char*) uart_command, "l") || !strcmp((const char*) uart_command, "L")) {
+
+				uartsendString("\n\r");
+				uartsendString("Secuencias disponibles:");
+				uartsendString("\n\r");
+
 				int i;
-				for (i = 0; i < added_sequences; i++) {
+				for (i = 0; i < repository_available_sequences_count(); i++) {
 
-					LedSequence *seq = available_sequences[i];
+					LedSequence *seq = repository_available_sequences_get(i);
 
 					strncpy(message, "", strlen(message));
-					sprintf(message, " %i: [%i,%i,%i] \n\r", i, seq->led_1, seq->led_2, seq->led_3);
+
+					//
+					// si el elemento actual es de la secuencia activa
+					//
+					if (repository_active_sequence_index_get() == i) {
+						sprintf(message, " %i: [%i,%i,%i] (Active) \n\r", i, seq->led_1, seq->led_2, seq->led_3);
+					}
+
+					//
+					// caso contrario
+					//
+					else {
+						sprintf(message, " %i: [%i,%i,%i] \n\r", i, seq->led_1, seq->led_2, seq->led_3);
+
+					}
 
 					uartsendString(message);
 				}
+
+				uartsendString("\n\r");
+				uartsendString("Velocidades disponibles:");
+				uartsendString("\n\r");
+
+				for (i = 0; i < repository_available_speed_count(); i++) {
+
+					uint16_t speed = repository_available_speed_get(i);
+
+					strncpy(message, "", strlen(message));
+
+					//
+					// si el elemento actual es de la velocidad activa
+					//
+					if (repository_active_speed_index_get() == i) {
+
+						sprintf(message, " %i: '%i' (Active) \n\r", i, speed);
+					}
+
+					//
+					// caso contrario
+					//
+					else {
+
+						sprintf(message, " %i: '%i' \n\r", i, speed);
+					}
+
+					uartsendString(message);
+				}
+
+			}
+
+			///
+			/// Se selecciona ingresar una nueva velocidad
+			///
+
+			else if (!strcmp((const char*) uart_command, "v") || !strcmp((const char*) uart_command, "V")) {
+
+			}
+
+			///
+			/// Se selecciona activar una secuencia
+			///
+
+			else if (!strcmp((const char*) uart_command, "z") || !strcmp((const char*) uart_command, "Z")) {
+
+				uartsendString("\n\r");
+				uartsendString("Ingrese el numero de secuencia a activar: ");
+
+				state = WAITING_FOR_SEQUENCE_ACTIVATION;
+
+			}
+
+			///
+			/// Se selecciona activar una velocidad
+			///
+
+			else if (!strcmp((const char*) uart_command, "b") || !strcmp((const char*) uart_command, "B")) {
+
+			} else if (strlen(uart_command) > 0) {
+				uartsendString("\n\r");
+				uartsendString("La opcion ingresada no se encuentra dentro de los valores permitidos ");
+				uartsendString("\n\r");
+				uartsendString("Intente de nuevo: ");
 			}
 
 			break;
 
 		case WAITING_FOR_SEQUENCE_LED_1:
 
-			strncpy(uart_command, "", strlen(uart_command));
 			uartReceiveStringSize(uart_command, 1);
 
 			if (strlen(uart_command) > 0)
@@ -156,13 +240,18 @@ void process_mef() {
 				new_sequence->led_1 = atoi(uart_command);
 
 				state = WAITING_FOR_SEQUENCE_LED_2;
+
+			} else if (strlen(uart_command) > 0) {
+				uartsendString("\n\r");
+				uartsendString("La opcion ingresada no se encuentra dentro de los valores permitidos ");
+				uartsendString("\n\r");
+				uartsendString("Intente de nuevo: ");
 			}
 
 			break;
 
 		case WAITING_FOR_SEQUENCE_LED_2:
 
-			strncpy(uart_command, "", strlen(uart_command));
 			uartReceiveStringSize(uart_command, 1);
 
 			if (strlen(uart_command) > 0)
@@ -186,12 +275,17 @@ void process_mef() {
 				new_sequence->led_2 = atoi(uart_command);
 
 				state = WAITING_FOR_SEQUENCE_LED_3;
+
+			} else if (strlen(uart_command) > 0) {
+				uartsendString("\n\r");
+				uartsendString("La opcion ingresada no se encuentra dentro de los valores permitidos ");
+				uartsendString("\n\r");
+				uartsendString("Intente de nuevo: ");
 			}
 			break;
 
 		case WAITING_FOR_SEQUENCE_LED_3:
 
-			strncpy(uart_command, "", strlen(uart_command));
 			uartReceiveStringSize(uart_command, 1);
 
 			if (strlen(uart_command) > 0)
@@ -216,6 +310,12 @@ void process_mef() {
 
 				state = RECORD_SEQUENCE;
 
+			} else if (strlen(uart_command) > 0) {
+				uartsendString("\n\r");
+				uartsendString("La opcion ingresada no se encuentra dentro de los valores permitidos ");
+				uartsendString("\n\r");
+				uartsendString("Intente de nuevo: ");
+
 			}
 			break;
 
@@ -224,12 +324,11 @@ void process_mef() {
 			//
 			// agregamos la secuencia de leds
 			//
-			add_led_sequence(new_sequence);
+			repository_available_sequences_add(new_sequence);
 
 			//
 			// imprimimos la nueva secuencia creada
 			//
-			char message[30];
 			strncpy(message, "", strlen(message));
 			sprintf(message, "Secuencia Agregada: [%i,%i,%i] \n\r", new_sequence->led_1, new_sequence->led_2, new_sequence->led_3);
 
@@ -242,82 +341,65 @@ void process_mef() {
 
 			break;
 
-	}
+		case WAITING_FOR_SEQUENCE_ACTIVATION:
 
-}
+			uartReceiveStringSize(uart_command, 1);
 
-//
-//-------------------------------------- Public members ------------------------------------------------------------------
-//
+			if (strlen(uart_command) > 0) {
+				uartsendString((uint8_t*) uart_command);
+			}
 
-void uart_communication_service_config() {
+			if (!strcmp((const char*) uart_command, "0")
+					|| !strcmp((const char*) uart_command, "1")
+					|| !strcmp((const char*) uart_command, "2")
+					|| !strcmp((const char*) uart_command, "3")
+					|| !strcmp((const char*) uart_command, "4")
+					|| !strcmp((const char*) uart_command, "5")
+					|| !strcmp((const char*) uart_command, "6")
+					|| !strcmp((const char*) uart_command, "7")
+					|| !strcmp((const char*) uart_command, "8")
+					|| !strcmp((const char*) uart_command, "9")) {
 
-	//
-	// Configuracion de la UART
-	//
-	uartinit();
+				uint8_t selected_sequence_index = atoi(uart_command);
 
-	//
-	// Mensaje de bienvenida
-	//
-	int i;
-	for (i = 0; i < 10; i++)
-		uartsendString((uint8_t*) standardSeparator);
+				repository_active_sequence_index_set(selected_sequence_index);
 
-	uartsendString("\n\r");
-	uartsendString((uint8_t*) welcomeMessage);
+				state = SEQUENCE_ACTIVATED;
 
-	state = WELCOME;
+			} else if (strlen(uart_command) > 0) {
+				uartsendString("\n\r");
+				uartsendString("La opcion ingresada no se encuentra dentro de los valores permitidos ");
+				uartsendString("\n\r");
+				uartsendString("Intente de nuevo: ");
+			}
 
-}
+			break;
 
-void uart_communication_service_execute() {
-	process_mef();
-}
+		case SEQUENCE_ACTIVATED:
 
-void process_poc() {
+			///
+			/// agrego un statement vacio porque a C no le gusta que despues de una etiqueta
+			/// se empiece con una declaracion de variables x_X
+			///
+			;
 
-	uint8_t serial_input[128];
-	uint8_t command[2];
+			uint8_t index = repository_active_sequence_index_get();
+			LedSequence *sequence = repository_available_sequences_get(index);
 
-	memset(serial_input, '\0', sizeof(serial_input));
-	memset(command, '\0', sizeof(command));
-
-	//
-	// Imprimiendo las instrucciones estandar
-	//
-
-	int i;
-	for (i = 0; i < 7; i++)
-		uartsendString((uint8_t*) standardSeparator);
-
-	uartsendString((uint8_t*) standardCR);
-	uartsendString((uint8_t*) optionsMessage);
-	uartsendString((uint8_t*) standardCR);
-	uartsendString((uint8_t*) inputRequestMessage);
-
-	//
-	// Recibimos la respuesta
-	//
-	uartReceiveStringSize(command, 1);
-	while (!strcmp((const char*) command, "")) {
-		uartReceiveStringSize(command, 1);
-	}
-
-	uartsendString((uint8_t*) command);
-	uartsendString((uint8_t*) standardCR);
-	uartsendString((uint8_t*) standardCR);
-
-	char *responseMessage;
-
-	if (!strcmp((const char*) command, "a")) {
-		responseMessage = "El commando ingresado fue A";
-	} else if (!strcmp((const char*) command, "b")) {
-		responseMessage = "El commando ingresado fue B";
-	} else {
-		responseMessage = "El comando ingresado es invalido";
+			//
+			// imprimimos la nueva secuencia creada
+			//
+			strncpy(message, "", strlen(message));
+			sprintf(message, "Secuencia Activada:  %i [%i,%i,%i] \n\r", index, sequence->led_1, sequence->led_2, sequence->led_3);
+			
+			uartsendString("\n\r");
+			uartsendString(message);
+			
+			state = WELCOME;
+			
+			break;
+			
 	}
 	
-	uartsendString((uint8_t*) responseMessage);
-	uartsendString((uint8_t*) standardCR);
 }
+

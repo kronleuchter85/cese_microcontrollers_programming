@@ -6,6 +6,8 @@
  */
 #include <leds_blinking_service.h>
 
+#include <repository.h>
+
 //
 //-------------------------------------- Contants ----------------------------------------------------------------------
 //
@@ -21,7 +23,6 @@ static uint8_t last_led_index = 2;
 static int8_t current_led_index = 0;
 
 static LedDelay *ledsDelays[3];
-static LedSequenceConfig *ledConfig;
 
 //
 //-------------------------------------- Prototypes of Private functions -------------------------------------------------
@@ -36,13 +37,17 @@ static LedDelay* initializeLedDelay(Led_TypeDef led, tick_t duration);
 /*
  * Realiza la configuracion de los modulos de leds y delays correspondientes
  */
-void led_sequence_service_config(LedSequenceConfig *config) {
+void led_sequence_service_config() {
 
-	ledConfig = config;
+	uint8_t active_sequence_index = repository_active_sequence_index_get();
+	uint8_t active_speed_index = repository_active_speed_index_get();
 
-	ledsDelays[0] = initializeLedDelay(config->sequence[0], config->speed);
-	ledsDelays[1] = initializeLedDelay(config->sequence[1], config->speed);
-	ledsDelays[2] = initializeLedDelay(config->sequence[2], config->speed);
+	LedSequence *sequence = repository_available_sequences_get(active_sequence_index);
+	uint16_t speed = repository_available_speed_get(active_speed_index);
+
+	ledsDelays[0] = initializeLedDelay(sequence->led_1, speed);
+	ledsDelays[1] = initializeLedDelay(sequence->led_2, speed);
+	ledsDelays[2] = initializeLedDelay(sequence->led_3, speed);
 
 }
 
