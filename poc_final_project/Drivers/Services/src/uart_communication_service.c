@@ -13,7 +13,6 @@
 //
 //-------------------------------------- Contants ----------------------------------------------------------------------
 //
-
 const char *standardSeparator = "---------------------------------------------------------";
 const char *welcomeMessage = "Bienvenido!";
 
@@ -21,24 +20,27 @@ const char *welcomeMessage = "Bienvenido!";
 //-------------------------------------- Private Variables ------------------------------------------------------------------
 //
 
+static uint8_t speed_digits[4];
+static uint8_t last_speed_digit = 0;
+
 static LedSequence *new_sequence = NULL;
 static UartFlowState state = WAITING_FOR_USER_ACTIONS;
 
 //-------------------------------------- Functions Prototypes ------------------------------------------------------------------
 
-static void uart_flow_process_step_welcome();
-static void uart_flow_process_step_waiting_for_user_actions();
-static void uart_flow_process_step_sequence_activated();
-static void uart_flow_process_step_waiting_for_sequence_activation();
-static void uart_flow_process_step_record_sequence();
-static void uart_flow_process_step_waiting_for_sequence_led_3();
-static void uart_flow_process_step_waiting_for_sequence_led_2();
-static void uart_flow_process_step_waiting_for_sequence_led_1();
-static void uart_flow_process_utils_print_options();
-static void uart_flow_process_step_waiting_for_speed();
-static void uart_flow_process_step_recorded_speed();
-static void uart_flow_process_step_waiting_for_speed_activation();
-static void uart_flow_process_step_speed_activated();
+static void uart_flow_initialize();
+static void uart_flow_step_welcome();
+static void uart_flow_step_waiting_for_user_actions();
+static void uart_flow_step_sequence_activated();
+static void uart_flow_step_waiting_for_sequence_activation();
+static void uart_flow_step_record_sequence();
+static void uart_flow_step_waiting_for_sequence_led_3();
+static void uart_flow_step_waiting_for_sequence_led_2();
+static void uart_flow_step_waiting_for_sequence_led_1();
+static void uart_flow_step_waiting_for_speed();
+static void uart_flow_step_recorded_speed();
+static void uart_flow_step_waiting_for_speed_activation();
+static void uart_flow_step_speed_activated();
 
 //
 //-------------------------------------- Public members ------------------------------------------------------------------
@@ -55,6 +57,94 @@ void uart_communication_service_config() {
 	//
 	uartinit();
 
+	uart_flow_initialize();
+
+}
+
+void uart_communication_service_execute() {
+
+	switch (state) {
+
+		case WELCOME:
+
+			uart_flow_step_welcome();
+
+			break;
+
+		case WAITING_FOR_USER_ACTIONS:
+
+			uart_flow_step_waiting_for_user_actions();
+
+			break;
+
+		case WAITING_FOR_SEQUENCE_LED_1:
+
+			uart_flow_step_waiting_for_sequence_led_1();
+
+			break;
+
+		case WAITING_FOR_SEQUENCE_LED_2:
+			uart_flow_step_waiting_for_sequence_led_2();
+
+			break;
+
+		case WAITING_FOR_SEQUENCE_LED_3:
+
+			uart_flow_step_waiting_for_sequence_led_3();
+
+			break;
+
+		case RECORD_SEQUENCE:
+
+			uart_flow_step_record_sequence();
+
+			break;
+
+		case WAITING_FOR_SEQUENCE_ACTIVATION:
+
+			uart_flow_step_waiting_for_sequence_activation();
+
+			break;
+
+		case SEQUENCE_ACTIVATED:
+
+			uart_flow_step_sequence_activated();
+
+			break;
+
+		case WAITING_FOR_SPEED:
+
+			uart_flow_step_waiting_for_speed();
+
+			break;
+
+		case RECORDED_SPEED:
+
+			uart_flow_step_recorded_speed();
+
+			break;
+
+		case WAITING_FOR_SPEED_ACTIVATION:
+
+			uart_flow_step_waiting_for_speed_activation();
+
+			break;
+
+		case SPEED_ACTIVATED:
+
+			uart_flow_step_speed_activated();
+
+			break;
+
+	}
+}
+
+///
+/// ------------------------------------ Private Functions ----------------------------------------
+///
+
+static void uart_flow_initialize() {
+
 	//
 	// Mensaje de bienvenida
 	//
@@ -66,94 +156,10 @@ void uart_communication_service_config() {
 	uartsendString((uint8_t*) welcomeMessage);
 
 	state = WELCOME;
+
 }
 
-uint8_t speed_digits[4];
-uint8_t last_speed_digit = 0;
-
-void uart_communication_service_execute() {
-
-	switch (state) {
-
-		case WELCOME:
-
-			uart_flow_process_step_welcome();
-
-			break;
-
-		case WAITING_FOR_USER_ACTIONS:
-
-			uart_flow_process_step_waiting_for_user_actions();
-
-			break;
-
-		case WAITING_FOR_SEQUENCE_LED_1:
-
-			uart_flow_process_step_waiting_for_sequence_led_1();
-
-			break;
-
-		case WAITING_FOR_SEQUENCE_LED_2:
-			uart_flow_process_step_waiting_for_sequence_led_2();
-
-			break;
-
-		case WAITING_FOR_SEQUENCE_LED_3:
-
-			uart_flow_process_step_waiting_for_sequence_led_3();
-
-			break;
-
-		case RECORD_SEQUENCE:
-
-			uart_flow_process_step_record_sequence();
-
-			break;
-
-		case WAITING_FOR_SEQUENCE_ACTIVATION:
-
-			uart_flow_process_step_waiting_for_sequence_activation();
-
-			break;
-
-		case SEQUENCE_ACTIVATED:
-
-			uart_flow_process_step_sequence_activated();
-
-			break;
-
-		case WAITING_FOR_SPEED:
-
-			uart_flow_process_step_waiting_for_speed();
-
-			break;
-
-		case RECORDED_SPEED:
-
-			uart_flow_process_step_recorded_speed();
-
-			break;
-
-		case WAITING_FOR_SPEED_ACTIVATION:
-
-			uart_flow_process_step_waiting_for_speed_activation();
-
-			break;
-
-		case SPEED_ACTIVATED:
-
-			uart_flow_process_step_speed_activated();
-
-			break;
-
-	}
-}
-
-///
-/// ------------------------------------ Private Functions ----------------------------------------
-///
-
-static void uart_flow_process_step_speed_activated() {
+static void uart_flow_step_speed_activated() {
 
 	char message[30];
 
@@ -178,7 +184,7 @@ static void uart_flow_process_step_speed_activated() {
 	state = WELCOME;
 }
 
-static void uart_flow_process_step_waiting_for_speed_activation() {
+static void uart_flow_step_waiting_for_speed_activation() {
 
 	uint8_t uart_command[2];
 	strncpy(uart_command, "", strlen(uart_command));
@@ -214,7 +220,7 @@ static void uart_flow_process_step_waiting_for_speed_activation() {
 	}
 }
 
-static void uart_flow_process_step_waiting_for_speed() {
+static void uart_flow_step_waiting_for_speed() {
 
 	uint8_t uart_command[2];
 	strncpy(uart_command, "", strlen(uart_command));
@@ -256,7 +262,7 @@ static void uart_flow_process_step_waiting_for_speed() {
 
 }
 
-static void uart_flow_process_step_recorded_speed() {
+static void uart_flow_step_recorded_speed() {
 	char message[30];
 
 	uint16_t new_speed = atoi(speed_digits);
@@ -285,19 +291,34 @@ static void uart_flow_process_step_recorded_speed() {
 	state = WELCOME;
 }
 
-static void uart_flow_process_step_welcome() {
+static void uart_flow_step_welcome() {
 
 	char message[30];
 
 	uint8_t uart_command[2];
 	strncpy(uart_command, "", strlen(uart_command));
 	uartsendString("\n\r");
-	uart_flow_process_utils_print_options();
+
+	uartsendString("\n\r");
+	uartsendString("Ingrese una Opcion:");
+	uartsendString("\n\r");
+	uartsendString(" [L] Listar Secuencias y Velocidades Disponibles ");
+	uartsendString("\n\r");
+	uartsendString(" [S] Ingresar una Nueva Secuencia ");
+	uartsendString("\n\r");
+	uartsendString(" [V] Ingresar una Nueva Velocidad ");
+	uartsendString("\n\r");
+	uartsendString(" [Z] Activar una Secuencia ");
+	uartsendString("\n\r");
+	uartsendString(" [B] Activar una Velocidad ");
+	uartsendString("\n\r");
+	uartsendString(" [H] Help ");
+	uartsendString("\n\r");
 
 	state = WAITING_FOR_USER_ACTIONS;
 }
 
-static void uart_flow_process_step_waiting_for_user_actions() {
+static void uart_flow_step_waiting_for_user_actions() {
 
 	char message[30];
 
@@ -418,7 +439,6 @@ static void uart_flow_process_step_waiting_for_user_actions() {
 		uartsendString("Ingrese el numero de secuencia a activar: ");
 
 		state = WAITING_FOR_SEQUENCE_ACTIVATION;
-
 	}
 
 	///
@@ -431,7 +451,10 @@ static void uart_flow_process_step_waiting_for_user_actions() {
 		uartsendString("Ingrese el numero de velocidad a activar: ");
 
 		state = WAITING_FOR_SPEED_ACTIVATION;
+	}
+	else if (!strcmp((const char*) uart_command, "h") || !strcmp((const char*) uart_command, "H")) {
 
+		uart_flow_step_welcome();
 	}
 
 	else if (strlen(uart_command) > 0) {
@@ -442,7 +465,7 @@ static void uart_flow_process_step_waiting_for_user_actions() {
 	}
 }
 
-static void uart_flow_process_step_sequence_activated() {
+static void uart_flow_step_sequence_activated() {
 
 	char message[30];
 
@@ -467,7 +490,7 @@ static void uart_flow_process_step_sequence_activated() {
 	state = WELCOME;
 }
 
-static void uart_flow_process_step_waiting_for_sequence_activation() {
+static void uart_flow_step_waiting_for_sequence_activation() {
 
 	uint8_t uart_command[2];
 	strncpy(uart_command, "", strlen(uart_command));
@@ -503,7 +526,7 @@ static void uart_flow_process_step_waiting_for_sequence_activation() {
 	}
 }
 
-static void uart_flow_process_step_record_sequence() {
+static void uart_flow_step_record_sequence() {
 	char message[30];
 
 	//
@@ -525,7 +548,7 @@ static void uart_flow_process_step_record_sequence() {
 	state = WELCOME;
 }
 
-static void uart_flow_process_step_waiting_for_sequence_led_3() {
+static void uart_flow_step_waiting_for_sequence_led_3() {
 
 	uint8_t uart_command[2];
 	strncpy(uart_command, "", strlen(uart_command));
@@ -563,7 +586,7 @@ static void uart_flow_process_step_waiting_for_sequence_led_3() {
 	}
 }
 
-static void uart_flow_process_step_waiting_for_sequence_led_2() {
+static void uart_flow_step_waiting_for_sequence_led_2() {
 
 	uint8_t uart_command[2];
 	strncpy(uart_command, "", strlen(uart_command));
@@ -601,7 +624,7 @@ static void uart_flow_process_step_waiting_for_sequence_led_2() {
 
 }
 
-static void uart_flow_process_step_waiting_for_sequence_led_1() {
+static void uart_flow_step_waiting_for_sequence_led_1() {
 
 	uint8_t uart_command[2];
 	strncpy(uart_command, "", strlen(uart_command));
@@ -629,31 +652,13 @@ static void uart_flow_process_step_waiting_for_sequence_led_1() {
 		new_sequence->led_1 = atoi(uart_command);
 
 		state = WAITING_FOR_SEQUENCE_LED_2;
-
+		
 	} else if (strlen(uart_command) > 0) {
 		uartsendString("\n\r");
 		uartsendString("La opcion ingresada no se encuentra dentro de los valores permitidos ");
 		uartsendString("\n\r");
 		uartsendString("Intente de nuevo: ");
 	}
-
-}
-
-static void uart_flow_process_utils_print_options() {
-
-	uartsendString("\n\r");
-	uartsendString("Ingrese una Opcion:");
-	uartsendString("\n\r");
-	uartsendString(" [L] Listar Secuencias y Velocidades Disponibles ");
-	uartsendString("\n\r");
-	uartsendString(" [S] Ingresar una Nueva Secuencia ");
-	uartsendString("\n\r");
-	uartsendString(" [V] Ingresar una Nueva Velocidad ");
-	uartsendString("\n\r");
-	uartsendString(" [Z] Activar una Secuencia ");
-	uartsendString("\n\r");
-	uartsendString(" [B] Activar una Velocidad ");
-	uartsendString("\n\r");
 	
 }
 

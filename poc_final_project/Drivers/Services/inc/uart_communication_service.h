@@ -8,6 +8,10 @@
 #ifndef API_INC_UART_COMMUNICATION_SERVICE_H_
 #define API_INC_UART_COMMUNICATION_SERVICE_H_
 
+//
+//-------------------------------------- Contants ----------------------------------------------------------------------
+//
+
 typedef enum {
 	WELCOME,
 	WAITING_FOR_USER_ACTIONS,

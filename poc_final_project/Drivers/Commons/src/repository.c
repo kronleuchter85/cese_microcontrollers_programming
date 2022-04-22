@@ -29,6 +29,9 @@ uint8_t repository_available_sequences_count() {
 	return added_sequences;
 }
 
+/*
+ * Devuelve la Secuencia de leds indicada por el indice
+ */
 LedSequence* repository_available_sequences_get(uint8_t index) {
 	if (index < repository_available_sequences_count())
 		return available_sequences[index];
@@ -36,6 +39,9 @@ LedSequence* repository_available_sequences_get(uint8_t index) {
 		return NULL;
 }
 
+/*
+ * Agrega una nueva secuencia de leds
+ */
 void repository_available_sequences_add(LedSequence *seq) {
 	available_sequences[added_sequences] = seq;
 	added_sequences++;
@@ -70,6 +76,9 @@ void repository_active_speed_index_set(uint8_t index) {
 	active_speed_index = index;
 }
 
+/*
+ * Inicializa el repositorio de secuencias y velocidades disponibles
+ */
 void repository_initialize() {
 	LedSequence *new_sequence = malloc(sizeof(LedSequence));
 	new_sequence->led_1 = 0;

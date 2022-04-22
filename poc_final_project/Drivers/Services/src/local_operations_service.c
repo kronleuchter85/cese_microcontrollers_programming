@@ -36,6 +36,10 @@ void local_operations_service_execute() {
 	//
 	debounceFSM_update();
 
+	//
+	// si se presiono el boton de usuario entonces se ejecuta o pausa
+	// la visualizacion del blinking
+	//
 	if (readKey()) {
 
 		show_sequence = !show_sequence;
