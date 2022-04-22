@@ -8,8 +8,6 @@
 #ifndef SERVICES_INC_LOCAL_OPERATIONS_SERVICE_H_
 #define SERVICES_INC_LOCAL_OPERATIONS_SERVICE_H_
 
-#include "stm32f4xx_hal.h"
-#include "stm32f4xx_nucleo_144.h"
 #include "stdbool.h"
 
 void local_operations_service_show_sequence_set(bool s);

@@ -13,9 +13,6 @@
 #include <stdbool.h>
 #include <stdlib.h>
 
-#include "stm32f4xx_hal.h"  		/* <- HAL include */
-#include "stm32f4xx_nucleo_144.h"
-
 #include "API_delay.h"
 
 //

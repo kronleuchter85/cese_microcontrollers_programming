@@ -22,8 +22,11 @@
 
 int main(void) {
 
-	HAL_Init();
-	SystemClock_Config();
+	//
+	// inicializamos las funciones de la plataforma definidas en un archivo
+	// que implementa el prototipo Firmware_Init.h
+	//
+	platform_initialze();
 
 	//
 	// inicializamos el repository

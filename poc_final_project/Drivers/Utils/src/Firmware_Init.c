@@ -7,6 +7,9 @@
 
 #include "Firmware_Init.h"
 
+#include "stm32f4xx_hal.h"  		/* <- HAL include */
+#include "stm32f4xx_nucleo_144.h"
+
 void SystemClock_Config(void) {
 	RCC_ClkInitTypeDef RCC_ClkInitStruct;
 	RCC_OscInitTypeDef RCC_OscInitStruct;
@@ -61,5 +64,11 @@ void Error_Handler(void) {
 	BSP_LED_On(LED2);
 	while (1) {
 	}
+}
+
+void platform_initialze() {
+
+	HAL_Init();
+	SystemClock_Config();
 }
 

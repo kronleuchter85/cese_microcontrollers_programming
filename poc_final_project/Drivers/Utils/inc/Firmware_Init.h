@@ -9,10 +9,7 @@
 #define API_FIRMWARE_INIT_H_
 
 #include <stdio.h>
-#include "stm32f4xx_hal.h"  		/* <- HAL include */
-#include "stm32f4xx_nucleo_144.h"
 
-void SystemClock_Config(void);
-void Error_Handler(void);
+void platform_initialze();
 
 #endif /* API_FIRMWARE_INIT_H_ */
