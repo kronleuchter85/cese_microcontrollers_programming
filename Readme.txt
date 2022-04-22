@@ -47,3 +47,8 @@ Implementa la logica de cambiar la velocidad de titilado entre FAST (100 ms) y S
 poc_5: Practica 5 - UART Communication
 ------------------------------------------------------------------------------------------------------------
 Implementa la logica para utilizar la comunicacion serie por medio de la UART. El programa de ejemplo recibe comandos y envia mensajes por el puerto serie COM3. Para ejecutarlo seguir las instrucciones detalladas en el archivo Readme.txt dentro del directorio.
+
+
+------------------------------------------------------------------------------------------------------------
+poc_final_project: Proyecto final de PdM
+------------------------------------------------------------------------------------------------------------
