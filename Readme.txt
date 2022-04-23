@@ -52,3 +52,4 @@ Implementa la logica para utilizar la comunicacion serie por medio de la UART. E
 ------------------------------------------------------------------------------------------------------------
 poc_final_project: Proyecto final de PdM
 ------------------------------------------------------------------------------------------------------------
+El objetivo de la aplicación es permitir realizar la configuración de un sistema embebido desde la computadora usando el puerto serie. La configuración permite cargar secuencias y velocidades leds, y también activar la configuración que debe ejecutarse. Luego, desde el sistema embebido se podrá poner en funcionamiento o pausar la ejecución de forma local haciendo uso del botón de usuario.
